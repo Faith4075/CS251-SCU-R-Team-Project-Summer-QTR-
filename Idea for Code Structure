@@ -1,0 +1,13 @@
+LA_Crime_Project/
+├── 01_load_and_clean.R      # Data import & preprocessing
+├── 02_time_analysis.R        # Temporal trends (2020-2024, COVID analysis)
+├── 03_spatial_analysis.R     # Mapping by districts/neighborhoods
+├── 04_pattern_analysis.R     # Crime type, time of day, day of week
+├── 05_report_generator.Rmd   # Final reproducible report
+├── data/
+│   └── raw_data.xlsx         # Your Excel file
+├── outputs/
+│   ├── figures/
+│   └── tables/
+└── functions/
+    └── custom_functions.R    # Reusable helper functions

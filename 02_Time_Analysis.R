@@ -1,6 +1,8 @@
-
-
-
+## CS251 || Dr. Ahreum Ju
+## Seattle City University
+## Authors: Faith Clausen, Mohammad Baher and Terrance Carpenter
+## Team Project || Team One
+## 05-02-2026
 
 library(dplyr)      # Data manipulation
 library(lubridate)  # Date handling
@@ -18,7 +20,7 @@ if(!"date_occurred" %in% names(crime_data)) {
 }
 # =================================================
 
-# Convert date column if it exists (adjust column name as needed)
+# Convert date column if it exists
 crime_data <- crime_data %>%
   mutate(
     date_occurred = as.Date(date_occurred),  # Convert to Date format
@@ -29,13 +31,13 @@ crime_data <- crime_data %>%
     quarter = quarter(date_occurred)         # Extract quarter (Q1-Q4)
   )
 
-# Filter to study period (2020-2024 as specified in abstract)
+# Filter to study period (2020-2024 as specified in abstract assignment turn in)
 crime_period <- crime_data %>%
   filter(year >= 2020, year <= 2024)  # Focus on 5-year analysis window
 
 # 1. Monthly crime trends by year
 monthly_trends <- crime_period %>%
-  group_by(year, month) %>%                      # Group by year AND month
+  group_by(year, month) %>%                      # Group by year and month
   summarise(total_crimes = n(), .groups = "drop") %>%  # Count incidents per month
   mutate(date = make_date(year, month, 1))       # Create date for plotting
 

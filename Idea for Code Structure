@@ -5,7 +5,7 @@ LA_Crime_Project/
 ├── 04_pattern_analysis.R     # Crime type, time of day, day of week
 ├── 05_report_generator.Rmd   # Final reproducible report
 ├── data/
-│   └── raw_data.xlsx         # Your Excel file
+│   └── raw_data.xlsx         # the Excel file
 ├── outputs/
 │   ├── figures/
 │   └── tables/

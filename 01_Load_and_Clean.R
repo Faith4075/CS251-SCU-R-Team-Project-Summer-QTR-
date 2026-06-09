@@ -1,87 +1,143 @@
 ## CS251 || Dr. Ahreum Ju
 ## Seattle City University
-## Authors: Faith Clausen, Mohammad Baher and Terrance Carpenter
+## Authors: Faith Faith, Terrance, Mohammad
 ## Team Project || Team One
-## 05-02-2026
+## 06-10-2026
+
+# **~~**~~**~~**~~**~~**~~**~~**~~**~~**~~
+# Script 1: Data loading and cleaning
+# Purpose: Import Excel data, clean column names, prepare for analysis
+# **~~**~~**~~**~~**~~**~~**~~**~~**~~**~~
 
 # Load required libraries
-library(readxl)      # Read Excel files
-library(dplyr)       # Data manipulation
-library(tidyr)       # Data cleaning
-library(janitor)     # Clean column names
+library(readxl) # Load Excel files into R
+library(dplyr) # Data manipulation and transformation
+library(lubridate) # Handle dates and times
+library(janitor) # Clean column names automatically
 
-# Define file path
-file_path <- "Crime_Data_from_2020_to_2024_NEW.xlsx"
+# Set display options to show all columns
+options(tibble.width = Inf)
 
-# Load the raw data
-crime_raw <- read_excel(file_path)  # Import Excel data into R
+# Define file path (Excel file is in the 'data' subfolder)
+file_path <- "data/Crime_Data_from_2020_to_2024_NEW.xlsx"
 
-# This section with make standard formatting
-crime_clean <- crime_raw %>%
-  clean_names() %>%  # Converts to snake_case (example -  "Area Name of Crime" -> "area_name_of_crime")
-  rename(
-    # Rename columns for easier typing
-    time_occurred = time_occurred_in_military_time,  # Military format (0-2359)
-    area_name = area_name_of_crime,                  # Geographic area name
-    district_num = reporting_district_number,        # Police district ID
-    crime_code = crime_code,                         # Numeric crime code
-    crime_desc = crime_code_decription,              # Full crime description
-    officer_badge = officers_badge_numbers_that_reported_on_scene,  # Responding officers
-    victim_age = victim_age,                         # Age of victim
-    victim_sex = victim_sex,                         # M/F/X
-    victim_ethnicity = victim_ethnicity_description, # Ethnicity description
-    premesis_code = premesis_code,                   # Location type code
-    premesis_desc = premesis_description,            # Location type description
-    weapon_code = weapon_used_code,                  # Weapon type code
-    weapon_desc = weapon_description,                # Weapon description
-    status = status,                                 # Case status code
-    status_desc = status_description,                # Case status description
-    crime_code_one = crime_code_one,                 # Primary crime code
-    address = address_location_of_disturbance,       # Street address
-    cross_street = cross_street_at_location,         # Intersection/nearest cross street
-    latitude = latitude,                             # GPS latitude coordinate
-    longitude = longititude                          # GPS longitude coordinate
-  ) %>%
-  # Filter out rows with missing essential data
-  filter(!is.na(crime_desc))  # Remove rows with no crime description
+# Load the raw data from Excel
+crime_raw <- read_excel(file_path) # Import all rows and columns
 
-# Handle missing values in key columns
-crime_clean <- crime_clean %>%
+# Display basic info about the dataset
+cat("~~** Raw Data Overview **~~\n") # Print header
+cat("Total rows:", nrow(crime_raw), "\n") # Count of incidents
+cat("Total columns:", ncol(crime_raw), "\n") # Count of variables
+cat("Column names:\n") # Header for column list
+print(names(crime_raw)) # Show all column names
+
+crime_clean <- crime_raw
+
+# **~~**~~**~~**~~**~~**~~**~~**~~**~~**~~
+# Section 1A ~ Date and time processing section
+# **~~**~~**~~**~~**~~**~~**~~**~~**~~**~~
+
+# Convert dates and process all columns
+crime_clean <- crime_clean |>
   mutate(
-    # Replace empty victim_age with NA (numeric columns)
-    victim_age = na_if(victim_age, ""),  # Convert blanks to NA
-    victim_age = as.numeric(victim_age),  # Ensure numeric type
-    
-    # Clean time_occurred (convert military time to numeric)
-    time_occurred = as.numeric(time_occurred),  # Convert to number (e.g., 1430 for 2:30 PM)
-    
-    # Create time of day categories from military time
+    # Parse dates (format: "2020 Nov 07 12:00:00 AM")
+    date_occurred = as.Date(date_occ, format = "%Y %b %d"),
+    date_reported = as.Date(`date rptd`, format = "%Y %b %d"),
+    # Extract temporal components from occurrence date
+    occurrence_year = year(date_occurred), # Extract year
+    occurrence_month = month(date_occurred), # Extract month number
+    occurrence_day = day(date_occurred), # Extract day of month
+    occurrence_week = week(date_occurred), # Extract week number
+    occurrence_quarter = quarter(date_occurred), # Extract quarter
+    # Day of week. Opted for full name for readability in plots
+    day_of_week = wday(date_occurred, label = TRUE, abbr = FALSE),
+    # Calculate reporting delay (days between occurrence and report)
+    reporting_delay = as.numeric(date_reported - date_occurred),
+    # Process military time
+    time_occurred = as.numeric(time_occurred_in_military_time),
     time_category = case_when(
-      is.na(time_occurred) ~ "Unknown",                    # Missing times
-      time_occurred < 600 ~ "Late Night (00:00-05:59)",    # Midnight to dawn
-      time_occurred < 1200 ~ "Morning (06:00-11:59)",       # Morning hours
-      time_occurred < 1700 ~ "Afternoon (12:00-16:59)",     # Afternoon hours
-      time_occurred < 2100 ~ "Evening (17:00-20:59)",       # Evening hours
-      TRUE ~ "Late Night (21:00-23:59)"                     # Late evening
+      is.na(time_occurred) ~ "Unknown", # Missing time data
+      time_occurred < 600 ~ "Late Night (00:00-05:59)", # Midnight to dawn
+      time_occurred < 1200 ~ "Morning (06:00-11:59)", # Morning hours
+      time_occurred < 1700 ~ "Afternoon (12:00-16:59)", # Afternoon hours
+      time_occurred < 2100 ~ "Evening (17:00-20:59)", # Evening hours
+      TRUE ~ "Late Night (21:00-23:59)" # Late night
+    ),
+    hour_of_day = floor(time_occurred / 100), # 1430 -> 14 (2 PM)
+    # Clean victim age (remove unrealistic values)
+    victim_age = as.numeric(victim__age),
+    victim_age_clean = case_when(
+      is.na(victim_age) ~ NA_real_, # Keep NAs as NA
+      victim_age < 0 ~ NA_real_, # Negative ages are impossible
+      victim_age > 120 ~ NA_real_, # Oldest recorded person is 122
+      TRUE ~ victim_age # Keep valid ages
+    ),
+    # Create age groups for demographic analysis
+    age_group = case_when(
+      is.na(victim_age_clean) ~ "Unknown",
+      victim_age_clean < 18 ~ "Juvenile (<18)",
+      victim_age_clean < 30 ~ "Young Adult (18-29)",
+      victim_age_clean < 50 ~ "Adult (30-49)",
+      victim_age_clean < 65 ~ "Middle Age (50-64)",
+      TRUE ~ "Senior (65+)"
+    ),
+    # Standardize categories in victim sex
+    victim_sex_clean = case_when(
+      victim_sex %in% c("M", "MALE") ~ "Male", # Male victims
+      victim_sex %in% c("F", "FEMALE") ~ "Female", # Female victims
+      victim_sex %in% c("X", "X Male", "X Female") ~ "Other/Unknown",
+      # Non-binary or unknown
+      TRUE ~ "Not Recorded" # Missing data
     )
   )
 
-# This will create a summary of cleaned data
+# **~~**~~**~~**~~**~~**~~**~~**~~**~~**~~
+# Section 1C ~ This section will filter to study period which is 2020-2024
+# as specified in the abstract
+# **~~**~~**~~**~~**~~**~~**~~**~~**~~**~~
+
+crime_study_period <- crime_clean |>
+  filter(occurrence_year >= 2020, occurrence_year <= 2024)
+# 5-year analysis window
+
+# Creating structure for summary statistics section
+# Dataset summary
 data_summary <- list(
-  total_rows = nrow(crime_clean),                    # Count total incidents
-  total_columns = ncol(crime_clean),                 # Count variables
-  unique_areas = n_distinct(crime_clean$area_name),  # Count distinct geographic areas
-  unique_crimes = n_distinct(crime_clean$crime_desc) # Count distinct crime types
+  total_incidents = nrow(crime_study_period), # Total crimes in study period
+  date_range_start = min(crime_study_period$date_occurred, na.rm = TRUE),
+  # Earliest date
+  date_range_end = max(crime_study_period$date_occurred, na.rm = TRUE),
+  # Latest date
+  unique_areas = n_distinct(crime_study_period$area_name_of_crime),
+  # Number of police areas
+  unique_crime_types = n_distinct(crime_study_period$crime_code_description),
+  # Types of crimes
+  unique_locations = n_distinct(crime_study_period$premises_description),
+  # Location types (note: premises, not premesis)
+  missing_coordinates = sum(is.na(crime_study_period$latitude))
+  # Count of missing GPS data
 )
 
 # Print summary to console
-print("===== DATA CLEANING COMPLETE =====")  # Section header
-print(data_summary)                         # Display summary statistics
+cat("\n **~~ Data Cleaning Complete ~~**\n") # Section header
+for (item in names(data_summary)) { # Loop through each summary item
+  cat(item, ":", data_summary[[item]], "\n") # Print each statistic
+}
 
-# Save cleaned data for other scripts to use
-saveRDS(crime_clean, "data/crime_cleaned.rds")  # Save as R binary file (fast loading)
-write.csv(crime_clean, "data/crime_cleaned.csv", row.names = FALSE)  # Save as CSV just in case
+# Save cleaned data for other scripts
+saveRDS(crime_study_period, "data/crime_cleaned.rds") # Binary format
+write.csv(crime_study_period, "data/crime_cleaned.csv", row.names = FALSE)
 
-# Print sample of data
-print("===== SAMPLE OF CLEANED DATA (first 5 rows) =====")  # Header
-print(head(crime_clean, 5))  # Show first 5 rows to verify cleaning worked
+# Display first few rows to verify cleaning worked
+cat("\n **~~ Sample of Cleaned Data (First 5 Rows) ~~** \n") # Header
+print(head(crime_study_period, 5) |>
+  select(
+    date_occurred, area_name_of_crime, crime_code_description,
+    victim_age, day_of_week
+  ))
+
+cat("\n **~~ Script 1 Complete. Data ready for analysis ~~** \n")
+
+# Display the column names for reference
+cat("\n **~~ Available Columns in Cleaned Data ~~** \n")
+print(names(crime_study_period))

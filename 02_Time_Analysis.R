@@ -30,6 +30,7 @@ cat(
 
 # **~~**~~**~~**~~**~~**~~**~~**~~**~~**~~
 # Section 2A ~ Annual crime totals from 2020-2024
+## annual_crime_totals.png
 # **~~**~~**~~**~~**~~**~~**~~**~~**~~**~~
 
 annual_totals <- crime_data |>
@@ -72,6 +73,7 @@ ggsave("outputs/figures/annual_crime_totals.png", annual_plot,
 
 # **~~**~~**~~**~~**~~**~~**~~**~~**~~**~~
 # Section 2B ~ Monthly trends for time series analysis
+## monthly_crime_trends.png
 # **~~**~~**~~**~~**~~**~~**~~**~~**~~**~~
 
 monthly_trends <- crime_data |>
@@ -111,6 +113,7 @@ ggsave("outputs/figures/monthly_crime_trends.png", monthly_plot,
 
 # **~~**~~**~~**~~**~~**~~**~~**~~**~~**~~
 # Section 2C ~ COVID-19 period comparison (Key research question)
+## covid_period_comparison.png
 # **~~**~~**~~**~~**~~**~~**~~**~~**~~**~~
 
 crime_data <- crime_data |>
@@ -194,6 +197,7 @@ ggsave("outputs/figures/covid_period_comparison.png", covid_plot,
 
 # **~~**~~**~~**~~**~~**~~**~~**~~**~~**~~
 # Section 2D ~ Pattern analysis of which days have the most crime
+## day_of_week_patterns.png
 # **~~**~~**~~**~~**~~**~~**~~**~~**~~**~~
 
 dow_patterns <- crime_data |>
@@ -239,6 +243,7 @@ ggsave("outputs/figures/day_of_week_patterns.png", dow_plot,
 
 # **~~**~~**~~**~~**~~**~~**~~**~~**~~**~~
 # Section 2E ~ Reporting Delay Analysis
+## reporting_delays.png
 # **~~**~~**~~**~~**~~**~~**~~**~~**~~**~~
 
 reporting_summary <- crime_data |>
